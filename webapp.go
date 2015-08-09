@@ -1,8 +1,9 @@
 package palantir
 
 import (
-	"fmt"
+	"appengine/user"
 	"github.com/gorilla/mux"
+	"html/template"
 	"net/http"
 )
 
@@ -10,7 +11,7 @@ func init() {
 	r := mux.NewRouter()
 
 	http.Handle("/", r)
-	r.Handle("/", handle(rootHandler))
+	r.Handle("/", handle(rootHandler)).Methods("GET")
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request, c Context) error {
@@ -19,6 +20,15 @@ func rootHandler(w http.ResponseWriter, r *http.Request, c Context) error {
 		http.NotFound(w, r)
 		return nil
 	}
-	fmt.Fprint(w, "Hello hobbits")
+	tmpl, err := template.ParseFiles("static/root.html", "static/home.html")
+	if err != nil {
+		return err
+	}
+	data := struct {
+		User *user.User
+	}{
+		c.user,
+	}
+	tmpl.Execute(w, data)
 	return nil
 }
