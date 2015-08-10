@@ -1,4 +1,4 @@
-package palantir
+package appengine_bootstrap
 
 import (
 	"net/http"

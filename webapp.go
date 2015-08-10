@@ -1,4 +1,4 @@
-package palantir
+package appengine_bootstrap
 
 import (
 	"appengine/user"
@@ -26,10 +26,22 @@ func rootHandler(w http.ResponseWriter, r *http.Request, c Context) error {
 	if err != nil {
 		return err
 	}
+
+	registrations := make([]Registration, 0, 20)
+	if c.user != nil {
+		// Fetch registrations
+		q := FindRegistration(c).Order("-Date").Limit(20)
+		if _, err := q.GetAll(c, &registrations); err != nil {
+			return err
+		}
+	}
+
 	data := struct {
-		User *user.User
+		User          *user.User
+		Registrations []Registration
 	}{
 		c.user,
+		registrations,
 	}
 	tmpl.Execute(w, data)
 	return nil
