@@ -70,12 +70,13 @@ func logoutHandler(w http.ResponseWriter, r *http.Request, c Context) error {
 func registerHandler(w http.ResponseWriter, r *http.Request, c Context) error {
 	id := r.FormValue("ID")
 	if id == "" {
-		http.Error(w, "", http.StatusBadRequest)
+		http.Error(w, "Missing parameter", http.StatusBadRequest)
 		return nil
 	}
 	reg := &Registration{
-		ID:   id,
-		Date: time.Now().Unix(),
+		ID:      id,
+		Account: c.user.Email,
+		Date:    time.Now().Unix(),
 	}
 	reg.Save(c)
 	return nil

@@ -6,8 +6,9 @@ import (
 )
 
 type Registration struct {
-	ID   string
-	Date int64
+	ID      string
+	Account string
+	Date    int64
 }
 
 func registrationKey(c appengine.Context) *datastore.Key {
