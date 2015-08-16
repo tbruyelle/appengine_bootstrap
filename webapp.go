@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 func init() {
@@ -14,6 +15,7 @@ func init() {
 	r.Handle("/", handle(rootHandler)).Methods("GET")
 	r.Handle("/login", handle(loginHandler)).Methods("GET")
 	r.Handle("/logout", handle(logoutHandler)).Methods("GET")
+	r.Handle("/register", handle(registerHandler)).Methods("GET")
 }
 
 func rootHandler(w http.ResponseWriter, r *http.Request, c Context) error {
@@ -62,5 +64,19 @@ func logoutHandler(w http.ResponseWriter, r *http.Request, c Context) error {
 		return nil
 	}
 	http.Redirect(w, r, url, http.StatusFound)
+	return nil
+}
+
+func registerHandler(w http.ResponseWriter, r *http.Request, c Context) error {
+	id := r.FormValue("ID")
+	if id == "" {
+		http.Error(w, "", http.StatusBadRequest)
+		return nil
+	}
+	reg := &Registration{
+		ID:   id,
+		Date: time.Now().Unix(),
+	}
+	reg.Save(c)
 	return nil
 }
