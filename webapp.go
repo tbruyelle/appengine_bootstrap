@@ -5,6 +5,7 @@ import (
 	"github.com/gorilla/mux"
 	"html/template"
 	"net/http"
+	"time"
 )
 
 func init() {
@@ -14,8 +15,32 @@ func init() {
 	r.Handle("/", handle(rootHandler)).Methods("GET")
 	r.Handle("/login", handle(loginHandler)).Methods("GET")
 	r.Handle("/logout", handle(logoutHandler)).Methods("GET")
+	r.Handle("/register", handle(registerHandler)).Methods("GET")
 }
 
+func registerHandler(w http.ResponseWriter, r *http.Request, c Context) error {
+	name := r.FormValue("name")
+
+	if len(name) == 0 {
+		http.Error(w, "Missing param", http.StatusBadRequest)
+		return nil
+	}
+
+	var regs []Registration
+	_, err := FindRegistration(c).Filter("Name=", name).GetAll(c, &regs)
+	if err != nil {
+		return err
+	}
+	var reg *Registration
+	if len(regs) == 0 {
+		reg = &Registration{0, name, time.Now().Unix()}
+	} else {
+		reg = &regs[0]
+		reg.Date = time.Now().Unix()
+	}
+	reg.Save(c)
+	return nil
+}
 func rootHandler(w http.ResponseWriter, r *http.Request, c Context) error {
 	if r.URL.Path != "/" {
 		c.Errorf("Unknow root %s", r.URL.Path)

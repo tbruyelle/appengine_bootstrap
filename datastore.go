@@ -6,7 +6,8 @@ import (
 )
 
 type Registration struct {
-	ID   string
+	ID   int64 `datastore:"-"`
+	Name string
 	Date int64
 }
 
@@ -14,9 +15,15 @@ func registrationKey(c appengine.Context) *datastore.Key {
 	return datastore.NewKey(c, "Registration", "default_registration", 0, nil)
 }
 
+func (r *Registration) Key(c appengine.Context) *datastore.Key {
+	if r.ID == 0 {
+		return datastore.NewIncompleteKey(c, "Registration", registrationKey(c))
+	}
+	return datastore.NewKey(c, "Registration", "default_registration", r.ID, nil)
+}
+
 func (r *Registration) Save(c appengine.Context) error {
-	key := datastore.NewIncompleteKey(c, "Registration", registrationKey(c))
-	_, err := datastore.Put(c, key, r)
+	_, err := datastore.Put(c, r.Key(c), r)
 	return err
 }
 
