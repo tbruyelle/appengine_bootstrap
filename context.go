@@ -19,6 +19,8 @@ var (
 	}
 )
 
+const Admin = "thomas.bruyelle@gmail.com"
+
 type ctxHandler func(http.ResponseWriter, *http.Request, Context) error
 
 func handle(h ctxHandler) http.HandlerFunc {
@@ -31,15 +33,35 @@ func handleLogged(h ctxHandler) http.HandlerFunc {
 
 func _handle(h ctxHandler, assertLogged bool) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		ctx := Context{}
-		ctx.Context = contexter(r)
-		ctx.user = user.Current(ctx)
-		if assertLogged && ctx.user == nil {
-			// No logged user, redirect to root
-			http.Redirect(w, r, "/", http.StatusFound)
-			return
+		c := Context{}
+		c.Context = contexter(r)
+
+		c.user = user.Current(c)
+		if c.user != nil && assertLogged {
+			//if c.user == nil {
+			//	// No logged user, redirect to root
+			//	http.Redirect(w, r, "/", http.StatusFound)
+			//	return
+			//}
+			c.Infof("Looking for authorized account %s", c.user.Email)
+			if c.user.Email != Admin {
+				q := FindAccount(c).Filter("Email = ", c.user.Email)
+				var accounts []Account
+				if _, err := q.GetAll(c, &accounts); err != nil {
+					http.Error(w, err.Error(), http.StatusInternalServerError)
+					return
+				}
+				if len(accounts) != 1 {
+					http.Error(w, "Unable to find unique authorized account", http.StatusForbidden)
+					return
+				}
+				if !accounts[0].Authorized {
+					http.Error(w, "Unauthorized account", http.StatusForbidden)
+					return
+				}
+			}
 		}
-		err := h(w, r, ctx)
+		err := h(w, r, c)
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
 		}

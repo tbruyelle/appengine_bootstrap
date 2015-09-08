@@ -12,7 +12,7 @@ func init() {
 	r := mux.NewRouter()
 
 	http.Handle("/", r)
-	r.Handle("/", handle(rootHandler)).Methods("GET")
+	r.Handle("/", handleLogged(rootHandler)).Methods("GET")
 	r.Handle("/login", handle(loginHandler)).Methods("GET")
 	r.Handle("/logout", handle(logoutHandler)).Methods("GET")
 	r.Handle("/register", handle(registerHandler)).Methods("GET")
@@ -87,5 +87,20 @@ func logoutHandler(w http.ResponseWriter, r *http.Request, c Context) error {
 		return nil
 	}
 	http.Redirect(w, r, url, http.StatusFound)
+	return nil
+}
+
+func registerHandler(w http.ResponseWriter, r *http.Request, c Context) error {
+	id := r.FormValue("ID")
+	if id == "" {
+		http.Error(w, "Missing parameter", http.StatusBadRequest)
+		return nil
+	}
+	reg := &Registration{
+		ID:      id,
+		Account: c.user.Email,
+		Date:    time.Now().Unix(),
+	}
+	reg.Save(c)
 	return nil
 }
